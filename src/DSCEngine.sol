@@ -50,7 +50,7 @@ contract DSCEngine is ReentrancyGuard {
     mapping(address token => address priceFeed) private s_priceFeeds;
     // @dev Amount of collateral deposited by user
     mapping(address user => mapping(address collateralToken => uint256 amount))
-    private s_collateralDeposited;
+        private s_collateralDeposited;
     // @dev Amount of DSC minted by user
     mapping(address user => uint256 amount) private s_DSCMinted;
     // @dev If we know exactly how many tokens we have, we could make this immutable!
@@ -81,11 +81,11 @@ contract DSCEngine is ReentrancyGuard {
         _;
     }
 
-    constructor(
+    function initialize(
         address[] memory tokenAddresses,
         address[] memory priceFeedAddresses,
         address dscAddress
-    ) {
+    ) public {
         if (tokenAddresses.length != priceFeedAddresses.length)
             revert DSCEngine_TokenAddressesAndPriceFeedAddressesMustBeSameLength();
         // USD Price Feeds
@@ -121,7 +121,14 @@ contract DSCEngine is ReentrancyGuard {
         bytes32 r,
         bytes32 s
     ) external {
-        depositCollateralWithPermit(tokenCollateralAddress, amountCollateral, deadline, v, r, s);
+        depositCollateralWithPermit(
+            tokenCollateralAddress,
+            amountCollateral,
+            deadline,
+            v,
+            r,
+            s
+        );
         mintDsc(amountDscToMint);
     }
 
@@ -229,16 +236,16 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     /**
-     * 
+     *
      * @param collateral The erc20 collateral address to liquidate from the user
      * @param user The user who has broken the health factor
      * @param debtToCover The amount of DSC you want to burn to imporve the users health factor
      * @notice You can partially liquidate a user
      * @notice You will get a liquidation bonus for taking the users funds
-     * @notice This function working assumes that the protocol will be roughly 150% overcollateralized 
+     * @notice This function working assumes that the protocol will be roughly 150% overcollateralized
      * in order for this to work
-     * @notice A known bug would be if the protocol was only 100% collateralized, we wouldn't be able 
-     * to liquidate anyone.For example, if the price of the collateral plummeted before anyone could 
+     * @notice A known bug would be if the protocol was only 100% collateralized, we wouldn't be able
+     * to liquidate anyone.For example, if the price of the collateral plummeted before anyone could
      * be liquidated
      */
     function liquidate(
@@ -352,7 +359,10 @@ contract DSCEngine is ReentrancyGuard {
     function _healthFactor(address user) private view returns (uint256) {
         // total DSC minted
         // total collateral VALUE
-        (uint256 totalDscMinted,uint256 collateralValueInUsd) = _getAccountInfo(user);
+        (
+            uint256 totalDscMinted,
+            uint256 collateralValueInUsd
+        ) = _getAccountInfo(user);
         if (totalDscMinted == 0) return type(uint256).max;
         uint256 collateralAdjustedForthreshold = (collateralValueInUsd *
             LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
@@ -369,7 +379,9 @@ contract DSCEngine is ReentrancyGuard {
         address token,
         uint256 amount
     ) private view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(
+            s_priceFeeds[token]
+        );
         (, int256 price, , , ) = priceFeed.staleCheckLatestRoundData();
         // If 1 ETH = 2000 USD
         // Then the returned value from Chainlink will be 2000 * 1e8 -> 2000 0000 0000

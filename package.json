@@ -1,0 +1,25 @@
+{
+  "name": "foundry-stablecoin",
+  "version": "1.0.0",
+  "description": "1. Chainlink Price feed\r     2. Set a function to exchange ETH & BTC -> $$$\r ##  Stability Mechanism (Minting) : Alogrithmic (Decentralized)\r     1. People can only mint the stablecoin with enough collateral (coded)\r 3.  Collateral: Exogenous (Crypto)\r     1. wETH\r     2. wBTC\r 4.  System invariants  \r     1. To ensure the solvency of the system : collateralValueInUsd > mintedDscValue\r 5.  Some proper oracle use",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/notctrl3/foundry-stablecoin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/notctrl3/foundry-stablecoin/issues"
+  },
+  "homepage": "https://github.com/notctrl3/foundry-stablecoin#readme"
+}

@@ -112,6 +112,19 @@ contract DSCEngine is ReentrancyGuard {
         mintDsc(amountDscToMint);
     }
 
+    function depositCollateralAndMintDscWithPermit(
+        address tokenCollateralAddress,
+        uint256 amountCollateral,
+        uint256 amountDscToMint,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        depositCollateralWithPermit(tokenCollateralAddress, amountCollateral, deadline, v, r, s);
+        mintDsc(amountDscToMint);
+    }
+
     /**
      * @notice follows CEI(check effects interactions)
      * @param token The address of the token to deposit as collateral
@@ -121,6 +134,38 @@ contract DSCEngine is ReentrancyGuard {
         address token,
         uint256 amount
     ) public moreThanZero(amount) isAllowedToken(token) nonReentrant {
+        s_collateralDeposited[msg.sender][token] += amount;
+        emit CollateralDeposited(msg.sender, token, amount);
+        bool success = IERC20(token).transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        if (!success) revert DSCEngine_TransferFailed();
+    }
+
+    /**
+     * @notice follows CEI(check effects interactions)
+     * @param token The address of the token to deposit as collateral
+     * @param amount The amount of collateral to deposit
+     */
+    function depositCollateralWithPermit(
+        address token,
+        uint256 amount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public moreThanZero(amount) isAllowedToken(token) nonReentrant {
+        IERC20(token).permit(
+            msg.sender,
+            address(this),
+            amount,
+            deadline,
+            v,
+            r,
+            s
+        );
         s_collateralDeposited[msg.sender][token] += amount;
         emit CollateralDeposited(msg.sender, token, amount);
         bool success = IERC20(token).transferFrom(

@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.20;
 
-import {MessageHashUtils} from "./MessageHashUtils.sol";
+import {MessageHashUtils} from "./libraries/MessageHashUtils.sol";
 import {AbstractStableCoinV1} from "./AbstractStableCoinV1.sol";
 import {EIP712Domain} from "./EIP712Domain.sol";
+import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
 abstract contract EIP2612 is AbstractStableCoinV1, EIP712Domain {
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
     bytes32 public constant PERMIT_TYPEHASH =
         0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
-    mapping(address => unit256) private _permitNonces;
+    mapping(address => uint256) private _permitNonces;
 
     /**
      *
@@ -35,9 +36,9 @@ abstract contract EIP2612 is AbstractStableCoinV1, EIP712Domain {
     function _permit(
         address owner,
         address spender,
-        unit256 value,
-        unit256 deadline,
-        unit8 v,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
         bytes32 r,
         bytes32 s
     ) internal {
@@ -47,12 +48,12 @@ abstract contract EIP2612 is AbstractStableCoinV1, EIP712Domain {
     function _permit(
         address owner,
         address spender,
-        unit256 value,
-        unit256 deadline,
+        uint256 value,
+        uint256 deadline,
         bytes memory signature
     ) internal {
         require(
-            deadline == type.max(unit256) || deadline >= now,
+            deadline == type(uint256).max || deadline >= block.timestamp,
             "StableCoinV1: permit is expired"
         );
 

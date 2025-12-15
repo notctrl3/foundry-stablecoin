@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 import {AbstractStableCoinV1} from "./AbstractStableCoinV1.sol";
 import {EIP712Domain} from "./EIP712Domain.sol";
-import {MessageHashUtils} from "./MessageHashUtils.sol";
+import {MessageHashUtils} from "./libraries/MessageHashUtils.sol";
 
 abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
     // keccak256("TransferWithAuthorization(address from,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)")
@@ -23,6 +23,10 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
     mapping(address => mapping(bytes32 => bool)) private _authorizationStates;
 
     event AuthorizationUsed(address indexed authorizer, bytes32 indexed nonce);
+    event AuthorizationCanceled(
+        address indexed authorizer,
+        bytes32 indexed nonce
+    );
 
     /**
      * @notice Returns the state of an authorization
@@ -200,13 +204,13 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
      * @param s             s of the signature
      */
     function _cancelAuthorization(
-        address authorization,
+        address authorizer,
         bytes32 nonce,
-        unit8 v,
+        uint8 v,
         bytes32 r,
         bytes32 s
     ) internal {
-        _cancelAuthorization(authorization, nonce, abi.encodePacked(r, s, v));
+        _cancelAuthorization(authorizer, nonce, abi.encodePacked(r, s, v));
     }
 
     /**
@@ -222,7 +226,7 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
         bytes memory signature
     ) internal {
         _requireUnusedAuthorization(authorizer, nonce);
-        _requireValidSignature(
+        _requiredValidSignature(
             authorizer,
             keccak256(
                 abi.encode(CANCEL_AUTHORIZATION_TYPEHASH, authorizer, nonce)
@@ -244,14 +248,17 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
     function _requireValidAuthorization(
         address authorizer,
         bytes32 nonce,
-        unit256 validAfter,
-        unit256 validBefore
+        uint256 validAfter,
+        uint256 validBefore
     ) private view {
         require(
-            now > validAfter,
+            block.timestamp > validAfter,
             "StableCoinV1: authorization is not yet valid"
         );
-        require(now < validBefore, "StableCoinV1: authorization is expired");
+        require(
+            block.timestamp < validBefore,
+            "StableCoinV1: authorization is expired"
+        );
         _requireUnusedAuthorization(authorizer, nonce);
     }
 
@@ -272,10 +279,9 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
 
     /**
      * @notice Check that authorization is valid
-     * @param authorizer    Authorizer's address
-     * @param nonce         Nonce of the authorization
-     * @param validAfter    The time after which this is valid (unix time)
-     * @param validBefore   The time before which this is valid (unix time)
+     * @param signer        Address of the claimed signer
+     * @param dataHash     Keccak-256 hash digest of the signed message
+     * @param signature     Signature byte array associated with hash
      */
     function _requiredValidSignature(
         address signer,

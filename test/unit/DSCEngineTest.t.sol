@@ -68,7 +68,7 @@ contract DSCEngineTest is StdCheats, Test {
                 .DSCEngine_TokenAddressesAndPriceFeedAddressesMustBeSameLength
                 .selector
         );
-        new DSCEngine(tokenAddressses, priceFeedAddresses, address(dsc));
+        new DSCEngine();
     }
 
     function testGetTokenAmountFromUsd() public {
@@ -114,11 +114,7 @@ contract DSCEngineTest is StdCheats, Test {
         );
         tokenAddressses = [address(mockDsc)];
         priceFeedAddresses = [ethUsdPriceFeed];
-        DSCEngine mockDsce = new DSCEngine(
-            tokenAddressses,
-            priceFeedAddresses,
-            address(mockDsc)
-        );
+        DSCEngine mockDsce = new DSCEngine();
         mockDsc.mint(user, amountCollateral);
         mockDsc.transferOwnership(address(mockDsce));
 
@@ -219,11 +215,7 @@ contract DSCEngineTest is StdCheats, Test {
         MockFailedMintDSC mockDsc = new MockFailedMintDSC(address(this));
         tokenAddressses = [address(mockDsc)];
         priceFeedAddresses = [ethUsdPriceFeed];
-        DSCEngine mockDsce = new DSCEngine(
-            tokenAddressses,
-            priceFeedAddresses,
-            address(mockDsc)
-        );
+        DSCEngine mockDsce = new DSCEngine();
         mockDsc.mint(user, amountCollateral);
         mockDsc.transferOwnership(address(mockDsce));
 
@@ -291,11 +283,7 @@ contract DSCEngineTest is StdCheats, Test {
         MockFailedTransfer mockDsc = new MockFailedTransfer(owner);
         tokenAddressses = [address(mockDsc)];
         priceFeedAddresses = [ethUsdPriceFeed];
-        DSCEngine mockDsce = new DSCEngine(
-            tokenAddressses,
-            priceFeedAddresses,
-            address(mockDsc)
-        );
+        DSCEngine mockDsce = new DSCEngine();
         mockDsc.mint(user, amountCollateral);
 
         vm.prank(owner);
@@ -405,11 +393,7 @@ contract DSCEngineTest is StdCheats, Test {
         MockMoreDebtDSC mockDsc = new MockMoreDebtDSC(owner, ethUsdPriceFeed);
         tokenAddressses = [weth];
         priceFeedAddresses = [ethUsdPriceFeed];
-        DSCEngine mockDsce = new DSCEngine(
-            tokenAddressses,
-            priceFeedAddresses,
-            address(mockDsc)
-        );
+        DSCEngine mockDsce = new DSCEngine();
         vm.prank(owner);
         mockDsc.transferOwnership(address(mockDsce));
 

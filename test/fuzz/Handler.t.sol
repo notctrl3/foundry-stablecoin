@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // handler is going to narrow down the way we call functiom
 
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Test } from "forge-std/Test.sol";

@@ -17,19 +17,19 @@ contract UpgradeabilityProxy is Proxy {
      * validated in the constructor.
      */
     bytes32 private constant IMPLEMENTATION_SLOT =
-        = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-    
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+
     /**
      * @dev Contract constructor.
      * @param implementationContract Address of the initial implementation.
      */
-    constructor(address implementation) {
+    constructor(address implementationContract) {
         assert(
             IMPLEMENTATION_SLOT ==
-                bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1)
+                bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)
         );
-        _setImplementation(implementation);
-    }   
+        _setImplementation(implementationContract);
+    }
 
     /**
      * @dev Returns the current implementation address.
@@ -59,28 +59,25 @@ contract UpgradeabilityProxy is Proxy {
         require(
             isContract(newImplementation),
             "UpgradeabilityProxy: new implementation is not a contract"
-        )
+        );
         bytes32 slot = IMPLEMENTATION_SLOT;
         assembly {
             sstore(slot, newImplementation)
         }
-            
     }
 
     /**
      * @dev Returns true if `address` is a contract.
-     * @param address Address to check
-     * 
+     * @param addr Address to check
+     *
      * NOTE: For an Externally Owned Account (EOA): The code size is 0. EOAs have no associated smart contract code.
      * For a Smart Contract: The code size is greater than 0, representing the length of the deployed bytecode.
-     */ 
-    function isContract(address address) internal view returns (bool) {
+     */
+    function isContract(address addr) internal view returns (bool) {
         uint256 size;
         assembly {
-            size := extcodesize(address)
+            size := extcodesize(addr)
         }
         return size > 0;
     }
-        
-        
 }

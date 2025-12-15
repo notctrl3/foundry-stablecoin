@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {Test, console} from "forge-std/Test.sol";
@@ -10,7 +10,7 @@ contract DecentralizedStablecoinTest is StdCheats, Test {
     DecentralizedStableCoin dsc;
 
     function setUp() public {
-        dsc = new DecentralizedStableCoin(msg.sender);
+        dsc = new DecentralizedStableCoin();
     }
 
     function testMustMintMoreThanZero() public {

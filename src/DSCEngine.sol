@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import {DecentralizedStableCoin} from "./DecentralizedStableCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {OracleLib, AggregatorV3Interface} from "./libraries/OracleLib.sol";
 
@@ -164,7 +165,7 @@ contract DSCEngine is ReentrancyGuard {
         bytes32 r,
         bytes32 s
     ) public moreThanZero(amount) isAllowedToken(token) nonReentrant {
-        IERC20(token).permit(
+        IERC20Permit(token).permit(
             msg.sender,
             address(this),
             amount,

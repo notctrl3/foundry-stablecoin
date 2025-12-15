@@ -1,11 +1,12 @@
 pragma solidity ^0.8.20;
 
 import {IERC1271} from "../interface/IERC1271.sol";
+import {ECRecover} from "./ECRecover.sol";
 
 library SignatureChecker {
     /**
-     * @dev Checks if a signature is valid for a given signer and data hash. 
-     * If the signer is a smart contract, the signature is validated against that smart contract using ERC1271, 
+     * @dev Checks if a signature is valid for a given signer and data hash.
+     * If the signer is a smart contract, the signature is validated against that smart contract using ERC1271,
      * otherwise it's validated using `ECRecover.recover`.
      * @param signer Address of the claimed signer
      * @param digest Keccak-256 hash digest of the signed message
@@ -13,7 +14,7 @@ library SignatureChecker {
      */
     function isValidSignatureNow(
         address signer,
-        byte32 digest,
+        bytes32 digest,
         bytes memory signature
     ) external view returns (bool) {
         if (!isContract(signer)) {
@@ -53,15 +54,15 @@ library SignatureChecker {
 
     /**
      * @dev Returns true if `address` is a contract.
-     * @param address Address to check
-     * 
+     * @param addr Address to check
+     *
      * NOTE: For an Externally Owned Account (EOA): The code size is 0. EOAs have no associated smart contract code.
      * For a Smart Contract: The code size is greater than 0, representing the length of the deployed bytecode.
-     */ 
-    function isContract(address address) internal view returns (bool) {
+     */
+    function isContract(address addr) internal view returns (bool) {
         uint256 size;
         assembly {
-            size := extcodesize(address)
+            size := extcodesize(addr)
         }
         return size > 0;
     }

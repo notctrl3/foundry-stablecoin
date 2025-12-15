@@ -35,12 +35,13 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
 
     /**
      * @dev Contract constructor.
-     * @param implementation Address of the initial implementation.
+     * @param implementationAddr Address of the initial implementation.
      */
-    constructor(address implementation) UpgradeabilityProxy(implementation) {
+    constructor(
+        address implementationAddr
+    ) UpgradeabilityProxy(implementationAddr) {
         assert(
-            ADMIN_SLOT == 
-                bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1)
+            ADMIN_SLOT == bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1)
         );
         _setAdmin(msg.sender);
     }
@@ -48,7 +49,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
     /**
      * @return The Address of the proxy admin.
      */
-    function admin() external view returns(address) {
+    function admin() external view returns (address) {
         return _admin();
     }
 
@@ -58,7 +59,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
     function implementation() external view returns (address) {
         return _implementation();
     }
-    
+
     /**
      * @dev Changes the admin of the proxy.
      * Only the current admin can call this function.
@@ -72,7 +73,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
         emit AdminChanged(_admin(), newAdmin);
         _setAdmin(newAdmin);
     }
-    
+
     /**
      * @dev Upgrade the backing implementation of the proxy.
      * Only the admin can call this function.
@@ -92,17 +93,16 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
      * called, as described in
      * https://solidity.readthedocs.io/en/develop/abi-spec.html#function-selector-and-argument-encoding.
      */
-    function upgradeToAndCall(address newImplementation, bytes calldata data)
-        external
-        payable
-        ifAdmin
-    {
+    function upgradeToAndCall(
+        address newImplementation,
+        bytes calldata data
+    ) external payable ifAdmin {
         _upgradeTo(newImplementation);
-        (bool success,) = address(this).call{value: msg.value}(data);
+        (bool success, ) = address(this).call{value: msg.value}(data);
         require(success);
     }
 
-    function _admin() internal view returns (address adm){
+    function _admin() internal view returns (address adm) {
         bytes32 slot = ADMIN_SLOT;
         assembly {
             adm := sload(slot)

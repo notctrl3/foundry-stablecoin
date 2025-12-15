@@ -6,6 +6,7 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {DSCEngine} from "../src/DSCEngine.sol";
 import {DecentralizedStableCoin} from "../src/DecentralizedStableCoin.sol";
 import {DecentralizedStableCoinProxy} from "../src/DecentralizedStableCoinProxy.sol";
+import {DSCEngineProxy} from "../src/DSCEngineProxy.sol";
 
 contract DeployDSC is Script {
     address[] public tokenAddresses;

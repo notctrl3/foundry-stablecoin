@@ -43,8 +43,8 @@ import {EIP712} from "./libraries/EIP712.sol";
  */
 contract DecentralizedStableCoin is
     AbstractStableCoinV1,
-    Pausable,
     Ownable,
+    Pausable,
     EIP3009,
     EIP2612
 {
@@ -56,14 +56,20 @@ contract DecentralizedStableCoin is
     string public name;
     string public symbol;
     string public currency;
+    address public masterMinter;
     bool internal initialized;
     mapping(address account => uint256) private _balances;
     mapping(address account => mapping(address spender => uint256))
         private _allowances;
     uint256 internal totalSupply_ = 0;
+    mapping(address => bool) internal minters;
+    mapping(address => uint256) internal minterAllowed;
 
     event Mint(address indexed minter, address indexed to, uint256 amount);
     event Burn(address indexed burner, uint256 amount);
+    event MinterConfigured(address indexed minter, uint256 minterAllowedAmount);
+    event MinterRemoved(address indexed oldMinter);
+    event MasterMinterChanged(address indexed newMasterMinter);
 
     /**
      * @notice Initializes the fiat token contract.
@@ -79,26 +85,42 @@ contract DecentralizedStableCoin is
         string memory tokenSymbol,
         string memory tokenCurrency,
         uint8 tokenDecimals,
+        address newMasterMinter,
         address newPauser,
         address newOwner
     ) public {
-        require(!initialized, "FiatToken: contract is already initialized");
+        require(!initialized, "dsc: contract is already initialized");
+        require(newPauser != address(0), "dsc: new pauser is the zero address");
+        require(newOwner != address(0), "dsc: new owner is the zero address");
         require(
-            newPauser != address(0),
-            "FiatToken: new pauser is the zero address"
-        );
-        require(
-            newOwner != address(0),
-            "FiatToken: new owner is the zero address"
+            newMasterMinter != address(0),
+            "dsc: new masterMinter is the zero address"
         );
 
         name = tokenName;
         symbol = tokenSymbol;
         currency = tokenCurrency;
         decimals = tokenDecimals;
+        masterMinter = newMasterMinter;
         pauser = newPauser;
         setOwner(newOwner);
         initialized = true;
+    }
+
+    /**
+     * @dev Throws if called by any account other than a minter.
+     */
+    modifier onlyMinters() {
+        require(minters[msg.sender], "FiatToken: caller is not a minter");
+        _;
+    }
+
+    modifier onlyMasterMinter() {
+        require(
+            msg.sender == masterMinter,
+            "dsc: caller is not the master minter"
+        );
+        _;
     }
 
     /**
@@ -118,6 +140,37 @@ contract DecentralizedStableCoin is
         address account
     ) external view override returns (uint256) {
         return _balanceOf(account);
+    }
+
+    /**
+     * @notice Adds or updates a new minter with a mint allowance.
+     * @param minter The address of the minter.
+     * @param minterAllowedAmount The minting amount allowed for the minter.
+     * @return True if the operation was successful.
+     */
+    function configureMinter(
+        address minter,
+        uint256 minterAllowedAmount
+    ) external onlyMasterMinter whenNotPaused returns (bool) {
+        require(minter != address(0), "dsc: minter is the zero address");
+        minters[minter] = true;
+        minterAllowed[minter] = minterAllowedAmount;
+        emit MinterConfigured(minter, minterAllowedAmount);
+        return true;
+    }
+
+    /**
+     * @notice Removes a minter.
+     * @param minter The address of the minter to remove.
+     * @return True if the operation was successful.
+     */
+    function removeMinter(
+        address minter
+    ) external onlyMasterMinter whenNotPaused returns (bool) {
+        minters[minter] = false;
+        minterAllowed[minter] = 0;
+        emit MinterRemoved(minter);
+        return true;
     }
 
     /**
@@ -210,7 +263,16 @@ contract DecentralizedStableCoin is
         emit Transfer(from, to, value);
     }
 
-    function burn(uint256 _amount) public override whenNotPaused onlyOwner {
+    /**
+     * @notice Checks if an account is a minter.
+     * @param account The address to check.
+     * @return True if the account is a minter, false if the account is not a minter.
+     */
+    function isMinter(address account) external view returns (bool) {
+        return minters[account];
+    }
+
+    function burn(uint256 _amount) public whenNotPaused onlyMinters {
         uint256 balance = _balanceOf(msg.sender);
         if (_amount <= 0) revert DecentralizedStableCoin_MustBeMoreThanZero();
         if (balance < _amount)
@@ -224,14 +286,24 @@ contract DecentralizedStableCoin is
     function mint(
         address _to,
         uint256 _amount
-    ) external onlyOwner whenNotPaused returns (bool) {
+    ) external onlyMinters whenNotPaused returns (bool) {
         if (_to == address(0)) revert DecentralizedStableCoin_NotZeroAddress();
         if (_amount <= 0) revert DecentralizedStableCoin_MustBeMoreThanZero();
         totalSupply_ = totalSupply_ + _amount;
         _setBalance(_to, _balanceOf(_to) + _amount);
+        minterAllowed[msg.sender] = minterAllowed[msg.sender] - _amount;
         emit Mint(msg.sender, _to, _amount);
         emit Transfer(address(0), _to, _amount);
         return true;
+    }
+
+    /**
+     * @notice Gets the minter allowance for an account.
+     * @param minter The address to check.
+     * @return The remaining minter allowance for the account.
+     */
+    function minterAllowance(address minter) external view returns (uint256) {
+        return minterAllowed[minter];
     }
 
     /**
@@ -246,7 +318,7 @@ contract DecentralizedStableCoin is
         return chainId;
     }
 
-    function _domainSeparator() internal view returns (bytes32) {
+    function _domainSeparator() internal view override returns (bytes32) {
         return EIP712.makeDomainSeparator(name, "1", _chainId());
     }
 
@@ -268,7 +340,7 @@ contract DecentralizedStableCoin is
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override whenNotPaused {
+    ) external whenNotPaused {
         _permit(owner, spender, value, deadline, v, r, s);
     }
 
@@ -291,7 +363,7 @@ contract DecentralizedStableCoin is
         uint256 validBefore,
         bytes32 nonce,
         bytes memory signature
-    ) external override whenNotPaused {
+    ) external whenNotPaused {
         _transferWithAuthorization(
             from,
             to,

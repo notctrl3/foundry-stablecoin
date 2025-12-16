@@ -11,7 +11,7 @@ library EIP712 {
         string memory name,
         string memory version,
         uint256 chainId
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -28,7 +28,7 @@ library EIP712 {
     function makeDomainSeparator(
         string memory name,
         string memory version
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         uint256 chainId;
         assembly {
             chainId := chainid()

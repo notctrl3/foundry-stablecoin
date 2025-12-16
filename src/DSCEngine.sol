@@ -57,7 +57,7 @@ contract DSCEngine is ReentrancyGuard {
     // @dev If we know exactly how many tokens we have, we could make this immutable!
     address[] private s_collateralTokens;
 
-    DecentralizedStableCoin private immutable i_dsc;
+    DecentralizedStableCoin private i_dsc;
 
     event CollateralDeposited(
         address indexed user,

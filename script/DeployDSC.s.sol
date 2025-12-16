@@ -44,6 +44,7 @@ contract DeployDSC is Script {
         bytes memory dscInitData = abi.encodeWithSelector(
             DecentralizedStableCoin.initialize.selector,
             "dsc",
+            "dsc",
             "USD",
             6,
             deployAddress, // pauser

@@ -173,7 +173,7 @@ abstract contract EIP3009 is AbstractStableCoinV1, EIP712Domain {
         bytes32 nonce,
         bytes memory signature
     ) internal {
-        require(to == msg.sender, "FiatTokenV1: caller is not the payee");
+        require(to == msg.sender, "StableCoinV1: caller is not the payee");
         _requireValidAuthorization(from, nonce, validAfter, validBefore);
         _requiredValidSignature(
             from,

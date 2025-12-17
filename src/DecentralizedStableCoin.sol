@@ -104,6 +104,7 @@ contract DecentralizedStableCoin is
         masterMinter = newMasterMinter;
         pauser = newPauser;
         setOwner(newOwner);
+        CACHED_DOMAIN_SEPARATOR = EIP712.makeDomainSeparator(tokenName, "1");
         initialized = true;
     }
 

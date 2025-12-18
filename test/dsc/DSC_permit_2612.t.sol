@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {PermitHelper} from "../helper/PermitHelper.sol";
 
-contract DSC_Permit_Test is Test {
+contract DSCPermitTest is Test {
     DecentralizedStableCoin dsc;
     address owner = address(1);
     address pauser = address(2);

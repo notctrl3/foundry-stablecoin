@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {Test} from "forge-std/Test.sol";
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {AuthHelper} from "../helper/AuthHelper.sol";
+import {ERC1271WalletMock} from "@openzeppelin/contracts/mocks/ERC1271WalletMock.sol";
+import {CommonHelper} from "../helper/Common.sol";
 
-contract DSC_TransferAuth_3009_Test is Test {
+contract DSCTransferAuth3009Test is CommonHelper {
     DecentralizedStableCoin dsc;
     address owner = address(1);
     address pauser = address(2);
@@ -285,6 +286,40 @@ contract DSC_TransferAuth_3009_Test is Test {
             nonces,
             abi.encodePacked(r, s, v)
         );
+        vm.stopPrank();
+    }
+
+    function testTransferWithAuthorizationUsingERC1271Wallet() public {
+        ERC1271WalletMock wallet = new ERC1271WalletMock(user);
+        vm.prank(minter1);
+        dsc.mint(address(wallet), 500e6);
+        assertEq(dsc.balanceOf(address(wallet)), 500e6);
+        vm.startPrank(spender);
+        bytes32 nonces = CommonHelper._generateNonce("auth-1");
+        uint256 currentTime = block.timestamp;
+        uint256 vaildAfter = currentTime;
+        uint256 vaildBefore = currentTime + 1 days;
+        bytes32 digest = AuthHelper.transferDigest(
+            dsc.DOMAIN_SEPARATOR(),
+            address(wallet),
+            spender,
+            500e6,
+            vaildAfter,
+            vaildBefore,
+            nonces
+        );
+        vm.warp(currentTime + 1 seconds);
+        dsc.transferWithAuthorization(
+            address(wallet),
+            spender,
+            500e6,
+            vaildAfter,
+            vaildBefore,
+            nonces,
+            CommonHelper._sign(digest, userPk)
+        );
+        assertEq(dsc.balanceOf(spender), 500e6);
+        assertEq(dsc.balanceOf(address(wallet)), 0);
         vm.stopPrank();
     }
 }

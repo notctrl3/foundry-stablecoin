@@ -18,10 +18,18 @@ contract HelperConfig is Script {
         address weth;
         address wbtc;
         uint256 deployerKey;
+        uint256 masterMinterKey;
+        uint256 pauserKey;
     }
 
     uint256 public DEFAULT_ANVIL_PRIVATE_KEY =
+        0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a;
+
+    uint256 public MASTER_MINTER_PRIVATE_KEY =
         0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+
+    uint256 public PAUSER_PRIVATE_KEY =
+        0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7f2a17121790b37e11fa;
 
     constructor() {
         if (block.chainid == 11_155_111) {
@@ -41,7 +49,9 @@ contract HelperConfig is Script {
             wbtcUsdPriceFeed: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
             weth: 0xdd13E55209Fd76AfE204dBda4007C227904f0a81,
             wbtc: 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063,
-            deployerKey: vm.envUint("PRIVATE_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY"),
+            masterMinterKey: vm.envUint("MASTER_MINTER_KEY"),
+            pauserKey: vm.envUint("PAUSER_KEY")
         });
     }
 
@@ -75,7 +85,9 @@ contract HelperConfig is Script {
             weth: address(wethMock),
             wbtcUsdPriceFeed: address(btcUsdPriceFeed),
             wbtc: address(wbtcMock),
-            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
+            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY,
+            masterMinterKey: MASTER_MINTER_PRIVATE_KEY,
+            pauserKey: PAUSER_PRIVATE_KEY
         });
     }
 }

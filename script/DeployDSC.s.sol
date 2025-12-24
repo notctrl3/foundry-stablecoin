@@ -14,7 +14,15 @@ contract DeployDSC is Script {
 
     function run()
         external
-        returns (DecentralizedStableCoin, DSCEngine, HelperConfig)
+        returns (
+            DecentralizedStableCoin,
+            DSCEngine,
+            HelperConfig,
+            address dscProxyAddress,
+            address dscLogicAddress,
+            address engineProxyAddress,
+            address engineLogicAddress
+        )
     {
         HelperConfig helperConfig = new HelperConfig(); // This comes with our mocks!
 
@@ -23,7 +31,9 @@ contract DeployDSC is Script {
             address wbtcUsdPriceFeed,
             address weth,
             address wbtc,
-            uint256 deployerKey
+            uint256 deployerKey,
+            uint256 minterMinterKey,
+            uint256 pauserKey
         ) = helperConfig.activeNetworkConfig();
 
         tokenAddresses = [weth, wbtc];
@@ -47,7 +57,8 @@ contract DeployDSC is Script {
             "dsc",
             "USD",
             6,
-            deployAddress, // pauser
+            vm.addr(minterMinterKey), // masterMinter
+            vm.addr(pauserKey), // pauser
             deployAddress // owner
         );
         dscProxy.upgradeToAndCall(address(dscLogic), dscInitData);
@@ -80,12 +91,15 @@ contract DeployDSC is Script {
         // cast proxy to DSCEngine type
         DSCEngine dscEngine = DSCEngine(address(dscEngineProxy));
 
-        // -------------------------------
-        // 3. Transfer DSC ownership to Engine proxy
-        // -------------------------------
-        dsc.transferOwnership(address(dscEngineProxy));
-
         vm.stopBroadcast();
-        return (dsc, dscEngine, helperConfig);
+        return (
+            dsc,
+            dscEngine,
+            helperConfig,
+            address(dscProxy),
+            address(dscLogic),
+            address(dscEngineProxy),
+            address(dscEngineLogic)
+        );
     }
 }

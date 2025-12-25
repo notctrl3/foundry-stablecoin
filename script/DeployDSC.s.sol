@@ -15,9 +15,13 @@ contract DeployDSC is Script {
     function run()
         external
         returns (
-            DecentralizedStableCoin,
-            DSCEngine,
-            HelperConfig,
+            address wethUsdPriceFeed,
+            address wbtcUsdPriceFeed,
+            address weth,
+            address wbtc,
+            uint256 deployerKey,
+            uint256 masterMinterKey,
+            uint256 pauserKey,
             address dscProxyAddress,
             address dscLogicAddress,
             address engineProxyAddress,
@@ -27,13 +31,13 @@ contract DeployDSC is Script {
         HelperConfig helperConfig = new HelperConfig(); // This comes with our mocks!
 
         (
-            address wethUsdPriceFeed,
-            address wbtcUsdPriceFeed,
-            address weth,
-            address wbtc,
-            uint256 deployerKey,
-            uint256 minterMinterKey,
-            uint256 pauserKey
+            wethUsdPriceFeed,
+            wbtcUsdPriceFeed,
+            weth,
+            wbtc,
+            deployerKey,
+            masterMinterKey,
+            pauserKey
         ) = helperConfig.activeNetworkConfig();
 
         tokenAddresses = [weth, wbtc];
@@ -57,7 +61,7 @@ contract DeployDSC is Script {
             "dsc",
             "USD",
             6,
-            vm.addr(minterMinterKey), // masterMinter
+            vm.addr(masterMinterKey), // masterMinter
             vm.addr(pauserKey), // pauser
             deployAddress // owner
         );
@@ -92,14 +96,10 @@ contract DeployDSC is Script {
         DSCEngine dscEngine = DSCEngine(address(dscEngineProxy));
 
         vm.stopBroadcast();
-        return (
-            dsc,
-            dscEngine,
-            helperConfig,
-            address(dscProxy),
-            address(dscLogic),
-            address(dscEngineProxy),
-            address(dscEngineLogic)
-        );
+
+        dscProxyAddress = address(dscProxy);
+        dscLogicAddress = address(dscLogic);
+        engineProxyAddress = address(dscEngineProxy);
+        engineLogicAddress = address(dscEngineLogic);
     }
 }
